@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterTel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Using Noto Sans Thai for better support of Thai characters -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            /* Changed font to Noto Sans Thai as the content is in Thai */
+            font-family: 'Noto Sans Thai', sans-serif; 
+        }
+          * {
+            font-family: 'Noto Sans Lao', sans-serif;
+        }
+        .fa
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Style for search highlight */
+        .search-highlight {
+            background-color: #fef9c3; /* Tailwind yellow-100 */
+            font-weight: 600;
+            padding: 1px 2px;
+            border-radius: 2px;
+            box-decoration-break: clone; /* Ensures highlight wraps correctly across lines */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <header class="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Telephone SYSTEM ລະບົບເບີພາຍໃນ </h1>
+                </div>
+                <nav class="flex space-x-4 sm:space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">ໜ້າຫຼັກ</a>
+                    <a href="https://docs.google.com/spreadsheets/d/18DA3qWTSso-hir23y-UIDXbfVR2__qzXvLVUPLkdEEc/edit?gid=406341505#gid=406341505" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors" target="_blank">File Sheet</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <!-- Search Input -->
+                <div class="w-full md:w-2/3">
+                    <label for="searchInput" class="sr-only">ຄົ້ນຫາພະນັກງານ</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <!-- Search Icon -->
+                            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <input type="text" id="searchInput" placeholder="ຄົ້ນຫາດ້ວຍຊື່ ພະແນກ ຫຼື ເບີໂທພາຍໃນ..." 
+                                class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow duration-300"
+                                autocomplete="off">
+                    </div>
+                </div>
+                <!-- Controls -->
+                <div class="flex flex-col sm:flex-row gap-3 md:gap-4 items-center justify-end w-full md:w-1/3">
+                    <button id="refreshBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <!-- Refresh Icon -->
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        refresh
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <label for="itemsPerPage" class="text-sm font-medium text-gray-700 hidden sm:block">ສະແດງ:</label>
+                        <select id="itemsPerPage" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full sm:w-auto">
+                            <option value="10">10 ລາຍການ</option>
+                            <option value="20">20 ລາຍການ</option>
+                            <option value="50">50 ລາຍການ</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status Alert -->
+        <div id="connectionStatus" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6 hidden">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <!-- Warning Icon -->
+                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">ກຳລັງສະແດງຂໍ້ມູນຕົວຢ່າງ</p>
+                    <p class="text-xs mt-1">URL: <span id="currentUrl" class="font-mono break-all text-xs"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">ກຳລັງໂຫຼດ...</p>
+        </div>
+
+        <!-- Employee Table Container -->
+        <div id="tableContainer" class="bg-white rounded-xl shadow-lg overflow-hidden hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">ຊື່</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">ພະແນກ</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">ເບີໂທພາຍໃນ</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">ຈັດການ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Footer -->
+            <div class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-3">
+                <div class="text-sm text-gray-700">
+                    ສະແດງ <span id="showingStart">0</span> ເຖິງ <span id="showingEnd">0</span> ຈາກ <span id="totalRecords">0</span> ລາຍການ
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="prevPage" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        ກ່ອນໜ້າ
+                    </button>
+                    <div id="pageNumbers" class="flex space-x-1">
+                    </div>
+                    <button id="nextPage" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        ຖັດໄປ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results State -->
+        <div id="noResults" class="bg-white rounded-xl shadow-lg p-8 text-center hidden">
+            <!-- No Results Icon -->
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.08-2.33M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">ບໍ່ມີຂໍ້ມູນ</h3>
+            <p class="text-gray-600">ລອງປ່ຍນຄຳຄົ້ນຫາຫຼືລ້າງຕົວກອງ</p>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full transform transition-all fade-in">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900">ລາຍລະອຽດພະນັກງານ</h3>
+                            <button id="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <!-- Close Icon -->
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="modalContent" class="px-6 py-4">
+                        <!-- Modal content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allData = [];
+        let filteredData = []; 
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let isUsingGoogleSheets = false;
+        
+        // Google Apps Script URL - แก้ไข URL นี้ให้ตรงกับ URL ที่คุณได้จาก Google Apps Script
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyI6VWZCAMZfmIkrlazRfBFBEI8DtdI4Zl5lyFCxWFJ2nM7fDUnk5lk3e_PU2F7m_OBJw/exec';
+        
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const itemsPerPageSelect = document.getElementById('itemsPerPage');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const tableContainer = document.getElementById('tableContainer');
+        const tableBody = document.getElementById('tableBody');
+        const loadingState = document.getElementById('loadingState');
+        const noResults = document.getElementById('noResults');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const currentUrl = document.getElementById('currentUrl');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.getElementById('closeModal');
+        const prevPage = document.getElementById('prevPage');
+        const nextPage = document.getElementById('nextPage');
+        const pageNumbers = document.getElementById('pageNumbers');
+        
+        // --- Initialization and Event Setup ---
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUrl.textContent = SCRIPT_URL;
+            // Set initial itemsPerPage based on select value
+            itemsPerPage = parseInt(itemsPerPageSelect.value); 
+            loadData();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // Event listener for search input
+            searchInput.addEventListener('input', handleSearch); 
+            itemsPerPageSelect.addEventListener('change', handleItemsPerPageChange);
+            refreshBtn.addEventListener('click', handleRefresh);
+            closeModal.addEventListener('click', hideModal);
+            prevPage.addEventListener('click', () => changePage(currentPage - 1));
+            nextPage.addEventListener('click', () => changePage(currentPage + 1));
+            
+            // Close modal when clicking backdrop
+            modal.addEventListener('click', function(e) {
+                // Check if the click target is the modal container itself (the backdrop)
+                if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                    hideModal();
+                }
+            });
+
+            // Close modal on escape key press
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    hideModal();
+                }
+            });
+        }
+        
+        // --- Data Fetching and Management ---
+        
+        async function loadData() {
+            try {
+                console.log('Loading data from:', SCRIPT_URL);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                    console.error('Fetch timeout exceeded (10 seconds)');
+                    showSampleData();
+                }, 10000); // 10 second timeout
+                
+                const response = await fetch(SCRIPT_URL, {
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.data && Array.isArray(data.data)) {
+                    // Filter out empty rows (where all cells are empty)
+                    allData = data.data.filter(row => 
+                        row && Array.isArray(row) && row.length > 0 && 
+                        row.some(cell => cell && cell.toString().trim() !== '')
+                    );
+                    
+                    filteredData = [...allData];
+                    currentPage = 1;
+                    isUsingGoogleSheets = true;
+                    
+                    if (allData.length > 0) {
+                        hideConnectionStatus();
+                    } else {
+                        // If connection succeeds but returns no data, show sample data as fallback
+                        showSampleData(); 
+                    }
+                } else {
+                    console.error('Error in data format from script:', data.error || 'Invalid data structure');
+                    showSampleData();
+                }
+            } catch (error) {
+                // This catches fetch errors, network issues, CORS issues, and timeouts
+                console.error('Error fetching data:', error.name, error.message);
+                if (error.name !== 'AbortError') {
+                    showSampleData();
+                }
+            } finally {
+                 // Ensure the table is rendered/updated after data is set
+                handleSearch(); 
+                // Hide loading animation after attempt is complete
+                const refreshIcon = refreshBtn.querySelector('svg');
+                refreshIcon.classList.remove('animate-spin');
+                refreshBtn.disabled = false;
+            }
+        }
+        
+        // Fallback data
+        function showSampleData() {
+            console.log('Loading sample data...');
+            isUsingGoogleSheets = false;
+            
+            allData = [
+                ['สมชาย ใจดี', 'IT', '101', '02-123-4567', '02-123-4568', '081-234-5678'],
+                ['สมหญิง รักงาน', 'HR', '102', '02-123-4569', '02-123-4570', '081-234-5679'],
+                ['สมศักดิ์ ขยัน', 'การเงิน', '103', '02-123-4571', '02-123-4572', '081-234-5680'],
+                ['สมใจ มีความสุข', 'การตลาด', '104', '02-123-4573', '02-123-4574', '081-234-5681'],
+                ['สมปอง ทำงาน', 'ผลิต', '105', '02-123-4575', '02-123-4576', '081-234-5682'],
+                ['สมพร สวยงาม', 'ขาย', '106', '02-123-4577', '02-123-4578', '081-234-5683'],
+                ['สมคิด เก่ง', 'บัญชี', '107', '02-123-4579', '02-123-4580', '081-234-5684'],
+                ['สมรัก ดี', 'จัดซื้อ', '108', '02-123-4581', '02-123-4582', '081-234-5685'],
+                ['คุณธวัชชัย บุญมี', 'IT Support', '109', '02-555-1234', '02-555-1235', '090-123-0001'],
+                ['คุณรัตนาวดี แก้วใส', 'ฝ่ายบุคคล', '110', '02-555-1236', '02-555-1237', '090-123-0002'],
+                ['คุณปรีชา พัฒนา', 'พัฒนาผลิตภัณฑ์', '111', '02-555-1238', '02-555-1239', '090-123-0003'],
+                ['คุณสุดารัตน์ โชคดี', 'บัญชี', '112', '02-555-1240', '02-555-1241', '090-123-0004'],
+                ['คุณวิจิตร ศิลป์', 'กราฟิกดีไซน์', '113', '02-555-1242', '02-555-1243', '090-123-0005'],
+                ['คุณวันดี ใจเย็น', 'ฝ่ายขาย', '114', '02-555-1244', '02-555-1245', '090-123-0006'],
+                ['คุณอภิสิทธิ์ รุ่งเรือง', 'ผู้บริหาร', '001', '02-555-0000', '02-555-0001', '099-999-9999'],
+                ['คุณมานะ ปลอดภัย', 'ความปลอดภัย', '115', '02-555-1246', '02-555-1247', '090-123-0007']
+            ];
+            
+            filteredData = [...allData]; 
+            currentPage = 1;
+            
+            showConnectionStatus();
+        }
+
+        // --- Search and Filtering ---
+        
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            if (searchTerm === '') {
+                filteredData = [...allData];
+            } else {
+                filteredData = allData.filter(row => {
+                    // Search in columns: Name (0), Department (1), Internal Phone (2)
+                    return row.slice(0, 3).some(cell => {
+                         // Convert cell to string robustly before checking includes
+                        const cellString = String(cell || ''); 
+                        return cellString.toLowerCase().includes(searchTerm);
+                    });
+                });
+            }
+            
+            currentPage = 1; // Reset to first page on new search
+            renderTable();
+        }
+        
+        // Helper function for search highlighting
+        function highlightSearch(text, searchTerm) {
+            if (!searchTerm || !text) return text || '';
+
+            const textString = String(text);
+            
+            // Regex to globally find the searchTerm, case-insensitive
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'); 
+            
+            // Replace matching text with the highlighted span
+            return textString.replace(regex, '<span class="search-highlight">$&</span>');
+        }
+
+        // --- Table Rendering and Pagination ---
+
+        function handleItemsPerPageChange() {
+            itemsPerPage = parseInt(itemsPerPageSelect.value);
+            currentPage = 1;
+            renderTable();
+        }
+        
+        function handleRefresh() {
+            // Show loading state and disable button
+            loadingState.classList.remove('hidden');
+            tableContainer.classList.add('hidden');
+            noResults.classList.add('hidden');
+            
+            const refreshIcon = refreshBtn.querySelector('svg');
+            refreshIcon.classList.add('animate-spin');
+            refreshBtn.disabled = true;
+            
+            // Reset search and reload data
+            searchInput.value = '';
+            loadData();
+        }
+        
+        // Renders the data currently visible on the page, applying highlighting
+        function renderTable() {
+            if (filteredData.length === 0) {
+                showNoResults();
+                return;
+            }
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+            
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            tableBody.innerHTML = pageData.map((row, index) => `
+                <tr class="hover:bg-gray-50 transition-colors fade-in">
+                    <!-- Name (Column 0) -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${highlightSearch(row[0] || '-', searchTerm)}
+                    </td>
+                    <!-- Department (Column 1) -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        ${highlightSearch(row[1] || '-', searchTerm)}
+                    </td>
+                    <!-- Internal Phone (Column 2) -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        ${highlightSearch(row[2] || '-', searchTerm)}
+                    </td>
+                    <!-- Action Button -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <!-- Use the original index in filteredData for showDetails -->
+                        <button onclick="showDetails(${startIndex + index})" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg">
+                            ເບີ່ງລາຍລະອຽດ
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updatePagination();
+            showTable();
+        }
+        
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPage * itemsPerPage, filteredData.length);
+            
+            // Update showing info
+            document.getElementById('showingStart').textContent = filteredData.length > 0 ? startIndex : 0;
+            document.getElementById('showingEnd').textContent = endIndex;
+            document.getElementById('totalRecords').textContent = filteredData.length;
+            
+            // Update buttons
+            prevPage.disabled = currentPage === 1;
+            nextPage.disabled = currentPage === totalPages || totalPages === 0;
+            
+            // Update page numbers
+            pageNumbers.innerHTML = '';
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+            
+            // Adjust start page if we hit the end bound
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            if (totalPages > 0) {
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageNum = i;
+                    const button = document.createElement('button');
+                    button.textContent = pageNum;
+                    button.className = `min-w-[32px] px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        pageNum === currentPage 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100'
+                    }`;
+                    button.addEventListener('click', () => changePage(pageNum));
+                    pageNumbers.appendChild(button);
+                }
+            }
+        }
+        
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTable();
+            }
+        }
+        
+        // --- Modal Functions ---
+        
+        function showDetails(index) {
+            const row = filteredData[index];
+            if (!row) return;
+            
+            // Define Thai labels for the data columns (assumed order: 0-Name, 1-Dept, 2-Internal, 3-DeptPhone, 4-Fax, 5-Mobile)
+            const labels = [
+                'ຊື່ ແລະ ນາມສະກຸນ', 
+                'ພະແນຫ', 
+                'ເບີໂທພາຍໃນ', 
+                'ເບີໂທພະແນກ', 
+                'Fax', 
+                'ເບີໂທສ່ວນຕົວ'
+            ];
+
+            let modalHtml = '<div class="space-y-4">';
+            modalHtml += '<div class="grid grid-cols-1 gap-4">';
+
+            row.forEach((value, i) => {
+                if (i < labels.length) { // Ensure we only process data up to the number of defined labels
+                    modalHtml += `
+                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                            <label class="block text-xs font-medium text-gray-500">${labels[i]}</label>
+                            <p class="text-sm font-semibold text-gray-900 break-words">${value || '-'}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            modalHtml += '</div>';
+            modalHtml += '</div>';
+
+            modalContent.innerHTML = modalHtml;
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hideModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // --- State Visualization Functions ---
+        
+        function showTable() {
+            loadingState.classList.add('hidden');
+            noResults.classList.add('hidden');
+            tableContainer.classList.remove('hidden');
+        }
+        
+        function showNoResults() {
+            loadingState.classList.add('hidden');
+            tableContainer.classList.add('hidden');
+            noResults.classList.remove('hidden');
+        }
+        
+        function showConnectionStatus() {
+            connectionStatus.classList.remove('hidden');
+        }
+        
+        function hideConnectionStatus() {
+            connectionStatus.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
